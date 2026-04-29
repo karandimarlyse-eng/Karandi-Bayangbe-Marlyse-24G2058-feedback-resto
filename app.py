@@ -26,7 +26,7 @@ st.markdown("""
     position: fixed;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.75);
+    background-color: rgba(0,0,0,0.80);
     z-index: 0;
 }
 
@@ -34,30 +34,28 @@ st.markdown("""
 .block-container {
     position: relative;
     z-index: 1;
-    background-color: rgba(0,0,0,0.65);
+    background-color: rgba(0,0,0,0.70);
     padding: 25px;
     border-radius: 15px;
 }
 
-/* 🔥 TITRES (FORCÉS) */
-[data-testid="stMarkdownContainer"] h1 {
-    font-size: 50px !important;
+/* TITRES */
+h1 {
+    font-size: 52px !important;
     color: #ff6b9d !important;
     text-align: center;
     text-shadow: 3px 3px 10px black;
 }
 
-[data-testid="stMarkdownContainer"] h2 {
-    font-size: 34px !important;
+h2 {
+    font-size: 36px !important;
     color: #ff85a2 !important;
-    margin-top: 20px;
     text-shadow: 2px 2px 6px black;
 }
 
-[data-testid="stMarkdownContainer"] h3 {
+h3 {
     font-size: 26px !important;
     color: #ffc0cb !important;
-    text-shadow: 2px 2px 5px black;
 }
 
 /* TEXTE */
@@ -74,6 +72,7 @@ body, p, label, div, span {
 
 input, textarea {
     color: #b30059 !important;
+    font-weight: bold;
 }
 
 /* BOUTONS */
@@ -89,14 +88,30 @@ input, textarea {
 </style>
 """, unsafe_allow_html=True)
 
-# NAVIGATION
-page = st.sidebar.radio("Navigation", ["🏠 Accueil", "📝 Donner un avis", "📊 Dashboard"])
-
 # =========================
-# DB (FIX IMPORTANT)
+# DB (FIX DEFINITIF)
 # =========================
 def get_connection():
-    return sqlite3.connect('feedback.db')
+    return sqlite3.connect('feedback.db', check_same_thread=False)
+
+# 🔥 CREATION TABLE (ULTRA IMPORTANT)
+conn = get_connection()
+c = conn.cursor()
+
+c.execute('''
+CREATE TABLE IF NOT EXISTS feedback (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    menu TEXT,
+    note INTEGER,
+    commentaire TEXT,
+    date TEXT
+)
+''')
+conn.commit()
+conn.close()
+
+# NAVIGATION
+page = st.sidebar.radio("Navigation", ["🏠 Accueil", "📝 Donner un avis", "📊 Dashboard"])
 
 # =========================
 # 🏠 ACCUEIL
@@ -104,7 +119,10 @@ def get_connection():
 if page == "🏠 Accueil":
     st.title("🍽️ Bienvenue chez K.M Restaurant")
 
-    st.image("https://images.unsplash.com/photo-1546069901-ba9599a7e63c", use_container_width=True)
+    st.image(
+        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
+        width='stretch'
+    )
 
     st.markdown("""
     ### 🌸 Une expérience culinaire unique
@@ -167,11 +185,9 @@ elif page == "📊 Dashboard":
     if data:
         df = pd.DataFrame(data, columns=["ID", "Menu", "Note", "Commentaire", "Date"])
 
-        # FIX DATE
         df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
         df = df.dropna(subset=["Date"])
 
-        # ACTUALISATION FORCÉE
         st.caption(f"🔄 Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}")
 
         menu_filter = st.selectbox("Filtrer par plat", ["Tous"] + list(df["Menu"].unique()))
@@ -187,12 +203,10 @@ elif page == "📊 Dashboard":
         with col2:
             st.metric("⭐ Moyenne", round(df_filtre["Note"].mean(), 2))
 
-        # MEILLEUR PLAT
         if not df.empty:
             best_menu = df.groupby("Menu")["Note"].mean().idxmax()
             st.success(f"🏆 Meilleur plat : {best_menu}")
 
-        # DERNIER COMMENTAIRE (FIX)
         st.markdown("### 💬 Dernier commentaire")
         if not df_filtre.empty:
             last = df_filtre.sort_values(by="Date", ascending=False).iloc[0]
@@ -200,14 +214,12 @@ elif page == "📊 Dashboard":
         else:
             st.warning("Aucun commentaire.")
 
-        # GRAPHIQUES
         st.markdown("### 📊 Moyenne par plat")
         st.bar_chart(df.groupby("Menu")["Note"].mean())
 
         st.markdown("### 📉 Evolution des notes")
         st.line_chart(df_filtre.set_index("Date")["Note"])
 
-        # TABLE
         with st.expander("📋 Voir les données"):
             st.dataframe(df_filtre)
 
