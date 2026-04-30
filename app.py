@@ -2,228 +2,272 @@ import streamlit as st
 import sqlite3
 from datetime import datetime
 import pandas as pd
+import matplotlib.pyplot as plt
 
-# CONFIG PAGE
+# CONFIG
 st.set_page_config(page_title="Feedback Resto", page_icon="🍽️", layout="centered")
 
 # =========================
-# 🎨 STYLE FIX COMPLET
+# STYLE
 # =========================
 st.markdown("""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&family=Dancing+Script:wght@600&display=swap');
 
-/* FOND */
 [data-testid="stAppViewContainer"] {
     background-image: url("https://images.unsplash.com/photo-1555396273-367ea4eb4db5");
     background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
 }
 
-/* OVERLAY */
 [data-testid="stAppViewContainer"]::before {
-    content: "";
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0,0,0,0.80);
-    z-index: 0;
+    content:"";
+    position:fixed;
+    width:100%;
+    height:100%;
+    background:rgba(255,182,193,0.35);
+    z-index:0;
 }
 
-/* CONTENU */
 .block-container {
-    position: relative;
-    z-index: 1;
-    background-color: rgba(0,0,0,0.70);
-    padding: 25px;
-    border-radius: 15px;
+    position:relative;
+    z-index:1;
+    background:rgba(255,255,255,0.95);
+    padding:25px;
+    border-radius:20px;
 }
 
-/* TITRES */
 h1 {
-    font-size: 52px !important;
-    color: #ff6b9d !important;
-    text-align: center;
-    text-shadow: 3px 3px 10px black;
+    font-family:'Dancing Script';
+    font-size:55px;
+    color:#ff2e88;
+    text-align:center;
+    font-weight:bold;
 }
 
-h2 {
-    font-size: 36px !important;
-    color: #ff85a2 !important;
-    text-shadow: 2px 2px 6px black;
+h2, h3 {
+    color:#ff4b7d;
+    font-weight:600;
 }
 
-h3 {
-    font-size: 26px !important;
-    color: #ffc0cb !important;
+body, p, label, div {
+    font-family:'Poppins';
+    color:#1a1a1a;
+    font-weight:500;
 }
 
-/* TEXTE */
-body, p, label, div, span {
-    color: white !important;
-    font-size: 17px;
-}
-
-/* SELECT & INPUT */
-.stSelectbox div[data-baseweb="select"] * {
-    color: #b30059 !important;
-    font-weight: bold;
-}
-
-input, textarea {
-    color: #b30059 !important;
-    font-weight: bold;
-}
-
-/* BOUTONS */
 .stButton>button {
-    background-color: #ff4b7d;
-    color: white;
-    border-radius: 12px;
-    padding: 10px 20px;
-    border: none;
-    font-weight: bold;
+    background:#ff4b7d;
+    color:white;
+    border-radius:12px;
 }
-
 </style>
 """, unsafe_allow_html=True)
 
 # =========================
-# DB (FIX DEFINITIF)
+# DB
 # =========================
 def get_connection():
-    return sqlite3.connect('feedback.db', check_same_thread=False)
+    return sqlite3.connect("feedback.db", check_same_thread=False)
 
-# 🔥 CREATION TABLE (ULTRA IMPORTANT)
-conn = get_connection()
-c = conn.cursor()
+def init_db():
+    conn = get_connection()
+    c = conn.cursor()
 
-c.execute('''
-CREATE TABLE IF NOT EXISTS feedback (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    menu TEXT,
-    note INTEGER,
-    commentaire TEXT,
-    date TEXT
-)
-''')
-conn.commit()
-conn.close()
-
-# NAVIGATION
-page = st.sidebar.radio("Navigation", ["🏠 Accueil", "📝 Donner un avis", "📊 Dashboard"])
-
-# =========================
-# 🏠 ACCUEIL
-# =========================
-if page == "🏠 Accueil":
-    st.title("🍽️ Bienvenue chez K.M Restaurant")
-
-    st.image(
-        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c",
-        width='stretch'
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS feedback (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        menu TEXT,
+        boisson TEXT,
+        note INTEGER,
+        gout INTEGER,
+        service INTEGER,
+        proprete INTEGER,
+        commentaire TEXT,
+        date TEXT
     )
-
-    st.markdown("""
-    ### 🌸 Une expérience culinaire unique
-
-    🔹 Plats frais et délicieux 🍲  
-    🔹 Service rapide ⚡  
-    🔹 Cuisine locale et internationale 🌍  
-
-    💡 Votre avis nous aide à nous améliorer !
-
-    👉 Cliquez sur **Donner un avis** pour noter nos plats.
     """)
 
-    st.success("💖 Merci pour votre confiance !")
+    conn.commit()
+    conn.close()
+
+init_db()
+
+# NAVIGATION
+page = st.sidebar.radio("Navigation", ["🏠 Accueil","📝 Donner un avis","📊 Dashboard"])
 
 # =========================
-# 📝 FORMULAIRE
+# ACCUEIL
+# =========================
+if page == "🏠 Accueil":
+    st.title("🍽️ K.M Restaurant")
+
+    col1, col2, col3 = st.columns(3)
+
+    with col1:
+        st.image("https://images.unsplash.com/photo-1604908176997-125f25cc6f3d", caption="Eru 🍲")
+    with col2:
+        st.image("https://images.unsplash.com/photo-1604908812025-0b2c1d06b6a6", caption="Poulet 🍗")
+    with col3:
+        st.image("https://images.unsplash.com/photo-1605478371310-a9f1e96b4ff4", caption="Riz sauté 🍛")
+
+    st.markdown("### 🌸 Nos spécialités")
+    st.write("""
+    🍝 Spaghetti  
+    🍲 Eru & Waterfufu  
+    🍲 Ndolé  
+    🍃 Okok  
+    🥗 Salade  
+    🍗 Poulet frit  
+    🥩 Bifteck  
+    🍛 Riz sauté  
+    """)
+
+    st.markdown("### 🥤 Boissons")
+    st.write("Bissap • Jus d'ananas • Soda")
+
+    st.success("Votre avis nous aide à nous améliorer 💖")
+
+# =========================
+# FORMULAIRE
 # =========================
 elif page == "📝 Donner un avis":
-    st.title("📝 Donnez votre avis")
+    st.title("📝 Votre avis")
 
     conn = get_connection()
     c = conn.cursor()
 
-    with st.form("form_feedback"):
-        menu = st.selectbox(
-            "🍝 Choisissez votre plat",
-            ["Spaghetti", "Eru and Waterfufu", "Fried Rice", "Fried Chicken", "Ndole and Plantain", "Bifteck", "Others"]
-        )
+    with st.form("form"):
+        menu = st.selectbox("🍽️ Plat",[
+            "Spaghetti","Eru and Waterfufu","Ndole",
+            "Okok","Salade","Fried Rice",
+            "Fried Chicken","Bifteck"
+        ])
 
-        note = st.slider("⭐ Note", 1, 10)
+        boisson = st.selectbox("🥤 Boisson",[
+            "Bissap","Ananas","Soda","Aucune"
+        ])
+
+        note = st.slider("⭐ Note globale",1,10)
+
+        avis_options = {
+            "😡 Mauvais": 2,
+            "😐 Passable": 4,
+            "🙂 Bon": 6,
+            "😍 Très bon": 8,
+            "🔥 Excellent": 10
+        }
+
+        gout = avis_options[st.selectbox("🍽️ Goût", list(avis_options.keys()))]
+        service = avis_options[st.selectbox("⚡ Service", list(avis_options.keys()))]
+        proprete = avis_options[st.selectbox("🧼 Propreté", list(avis_options.keys()))]
+
         commentaire = st.text_area("💬 Commentaire")
 
         submit = st.form_submit_button("Envoyer")
 
         if submit:
             if commentaire.strip() == "":
-                st.warning("⚠️ Veuillez écrire un commentaire")
+                st.warning("⚠️ Ajoute un commentaire")
             else:
-                c.execute(
-                    "INSERT INTO feedback (menu, note, commentaire, date) VALUES (?, ?, ?, ?)",
-                    (menu, note, commentaire, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-                )
+                c.execute("""
+                INSERT INTO feedback 
+                (menu,boisson,note,gout,service,proprete,commentaire,date)
+                VALUES (?,?,?,?,?,?,?,?)
+                """,(menu,boisson,note,gout,service,proprete,commentaire,
+                     datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
                 conn.commit()
-                st.success("✅ Feedback enregistré !")
+                st.success("💖 Merci pour votre confiance !")
 
     conn.close()
 
 # =========================
-# 📊 DASHBOARD FIX TOTAL
+# DASHBOARD
 # =========================
 elif page == "📊 Dashboard":
     st.title("📊 Dashboard")
 
     conn = get_connection()
-    c = conn.cursor()
 
-    data = c.execute("SELECT * FROM feedback ORDER BY id DESC").fetchall()
-
-    if data:
-        df = pd.DataFrame(data, columns=["ID", "Menu", "Note", "Commentaire", "Date"])
-
-        df["Date"] = pd.to_datetime(df["Date"], errors='coerce')
-        df = df.dropna(subset=["Date"])
-
-        st.caption(f"🔄 Dernière mise à jour : {datetime.now().strftime('%H:%M:%S')}")
-
-        menu_filter = st.selectbox("Filtrer par plat", ["Tous"] + list(df["Menu"].unique()))
-
-        if menu_filter == "Tous":
-            df_filtre = df.copy()
-        else:
-            df_filtre = df[df["Menu"] == menu_filter]
-
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("📈 Feedbacks", len(df_filtre))
-        with col2:
-            st.metric("⭐ Moyenne", round(df_filtre["Note"].mean(), 2))
+    try:
+        df = pd.read_sql_query("SELECT * FROM feedback ORDER BY id DESC", conn)
 
         if not df.empty:
-            best_menu = df.groupby("Menu")["Note"].mean().idxmax()
-            st.success(f"🏆 Meilleur plat : {best_menu}")
 
-        st.markdown("### 💬 Dernier commentaire")
-        if not df_filtre.empty:
-            last = df_filtre.sort_values(by="Date", ascending=False).iloc[0]
-            st.info(f"{last['Commentaire']} (⭐ {last['Note']}) - {last['Date']}")
+            df["date"] = pd.to_datetime(df["date"], errors='coerce')
+
+            st.metric("⭐ Moyenne", round(df["note"].mean(),2))
+            st.metric("📈 Feedbacks", len(df))
+
+            # Analyse
+            st.markdown("### 🧠 Analyse rapide")
+            if df["note"].mean() >= 8:
+                st.success("😍 Les clients sont très satisfaits")
+            elif df["note"].mean() >= 5:
+                st.info("🙂 Satisfaction moyenne")
+            else:
+                st.warning("😔 Clients insatisfaits")
+
+            # Classement
+            st.markdown("### 🏆 Classement des plats (fiable)")
+            ranking = df.groupby("menu").agg({
+                "note": "mean",
+                "id": "count"
+            }).rename(columns={"note": "moyenne", "id": "votes"})
+
+            ranking = ranking[ranking["votes"] >= 2]
+            ranking = ranking.sort_values(by="moyenne", ascending=False)
+
+            st.dataframe(ranking)
+
+            # Top 3
+            if not ranking.empty:
+                st.markdown("### 🥇 Top 3 des plats")
+                medals = ["🥇", "🥈", "🥉"]
+
+                for i, (plat, row) in enumerate(ranking.head(3).iterrows()):
+                    st.markdown(
+                        f"{medals[i]} **{plat}** — ⭐ {row['moyenne']:.1f} ({int(row['votes'])} avis)"
+                    )
+
+                st.success(f"🏆 Meilleur plat : {ranking.index[0]}")
+
+            # Pie boissons
+            st.markdown("### 🥤 Répartition des boissons")
+            fig1, ax1 = plt.subplots(figsize=(4,4))
+            df["boisson"].value_counts().plot.pie(
+                autopct='%1.1f%%',
+                ax=ax1,
+                textprops={'fontsize': 10},
+                wedgeprops={'edgecolor':'white'}
+            )
+            ax1.set_ylabel("")
+            st.pyplot(fig1)
+
+            # Qualité (bar chart propre)
+            st.markdown("### ⭐ Analyse de la qualité")
+
+            quality_means = {
+                "Goût": df["gout"].mean(),
+                "Service": df["service"].mean(),
+                "Propreté": df["proprete"].mean()
+            }
+
+            st.bar_chart(quality_means)
+
+            # Graphiques
+            st.bar_chart(df.groupby("menu")["note"].mean())
+            st.line_chart(df.set_index("date")["note"])
+
+            # Export
+            csv = df.to_csv(index=False).encode('utf-8')
+            st.download_button("📥 Télécharger", csv, "feedback.csv")
+
+            st.dataframe(df)
+
         else:
-            st.warning("Aucun commentaire.")
+            st.info("Aucune donnée")
 
-        st.markdown("### 📊 Moyenne par plat")
-        st.bar_chart(df.groupby("Menu")["Note"].mean())
-
-        st.markdown("### 📉 Evolution des notes")
-        st.line_chart(df_filtre.set_index("Date")["Note"])
-
-        with st.expander("📋 Voir les données"):
-            st.dataframe(df_filtre)
-
-    else:
-        st.info("Pas encore de données.")
+    except Exception as e:
+        st.error(f"Erreur: {e}")
 
     conn.close()
